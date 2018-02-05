@@ -16,9 +16,14 @@
 
 package com.openstat;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -27,9 +32,11 @@ import java.nio.ByteBuffer;
  * A minimalistic, memory size-savvy and fairly fast radix tree (AKA Patricia trie)
  * implementation that uses IPv4 addresses with netmasks as keys and 32-bit signed
  * integers as values.
- *
+ * <p>
  * This tree is generally uses in read-only manner: there are no key removal operation
  * and the whole thing works best in pre-allocated fashion.
+ * <p>
+ * Update by highfei2011 in 2018-01-28 .
  */
 public class IPv4RadixIntTree {
     /**
@@ -41,18 +48,26 @@ public class IPv4RadixIntTree {
     private static final int NULL_PTR = -1;
     private static final int ROOT_PTR = 0;
 
+    // 10000000000000000000000000000000 --> 32 bit
     private static final long MAX_IPV4_BIT = 0x80000000L;
 
     private int[] rights;
     private int[] lefts;
-    private int[] values;
-
+    private long[] values;
     private int allocatedSize;
     private int size;
 
+    private static FileSystem fs = null;
+    static {
+        try {
+            fs = FileSystem.get(new Configuration());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     /**
-     * Initializes IPv4 radix tree with default capacity of 1024 nodes. It should
-     * be sufficient for small databases.
+     * Initializes IPv4 radix tree with default capacity of 1024 nodes. It should be sufficient for small databases.
      */
     public IPv4RadixIntTree() {
         init(1024);
@@ -60,18 +75,70 @@ public class IPv4RadixIntTree {
 
     /**
      * Initializes IPv4 radix tree with a given capacity.
+     *
      * @param allocatedSize initial capacity to allocate
      */
     public IPv4RadixIntTree(int allocatedSize) {
         init(allocatedSize);
     }
 
+    /**
+     * Convert string ip to long.
+     *
+     * @param ipStr ip
+     * @return long value
+     * @throws UnknownHostException
+     */
+    private static long inetNtoa(String ipStr) throws UnknownHostException {
+        ByteBuffer bb = ByteBuffer.allocate(8);
+        bb.putInt(0);
+        bb.put(InetAddress.getByName(ipStr).getAddress());
+        bb.rewind();
+        return bb.getLong();
+    }
+
+    /**
+     * The total number of count local  text file  lines.
+     *
+     * @param filename file name
+     * @return The number of line .
+     * @throws IOException
+     */
+    private static int countLinesInLocalFile(String filename) throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(filename), 8192);
+        int i = 0;
+        while (br.readLine() != null) {
+            i++;
+        }
+        return i;
+    }
+
+    /**
+     * The total number of count hadoop distribute file system    text file  lines.
+     *
+     * @param filename file name
+     * @return The number of line .
+     * @throws IOException
+     */
+    private static int countLinesInHdfds(String filename) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(new Path(filename)), "utf-8"));
+        int j = 0;
+        while (br.readLine() != null) {
+            j++;
+        }
+        return j;
+    }
+
+    /**
+     * Initialize the size of the tree allocation.
+     * @param allocatedSize  size
+     */
     private void init(int allocatedSize) {
         this.allocatedSize = allocatedSize;
 
         rights = new int[this.allocatedSize];
         lefts = new int[this.allocatedSize];
-        values = new int[this.allocatedSize];
+        values = new long[this.allocatedSize];
 
         size = 1;
         lefts[0] = NULL_PTR;
@@ -81,13 +148,14 @@ public class IPv4RadixIntTree {
 
     /**
      * Puts a key-value pair in a tree.
-     * @param key IPv4 network prefix
-     * @param mask IPv4 netmask in networked byte order format (for example,
-     * 0xffffff00L = 4294967040L corresponds to 255.255.255.0 AKA /24 network
-     * bitmask)
+     *
+     * @param key   IPv4 network prefix
+     * @param mask  IPv4 netmask in networked byte order format (for example,
+     *              0xffffff00L = 4294967040L corresponds to 255.255.255.0 AKA /24 network
+     *              bitmask)
      * @param value an arbitrary value that would be stored under a given key
      */
-    public void put(long key, long mask, int value) {
+    public void put(long key, long mask, long value) {
         long bit = MAX_IPV4_BIT;
         int node = ROOT_PTR;
         int next = ROOT_PTR;
@@ -101,18 +169,14 @@ public class IPv4RadixIntTree {
         }
 
         if (next != NULL_PTR) {
-//            if (node.value != NO_VALUE) {
-//                throw new IllegalArgumentException();
-//            }
-
             values[node] = value;
             return;
         }
 
         while ((bit & mask) != 0) {
-            if (size == allocatedSize)
+            if (size == allocatedSize) {
                 expandAllocatedSize();
-
+            }
             next = size;
             values[next] = NO_VALUE;
             rights[next] = NULL_PTR;
@@ -132,9 +196,12 @@ public class IPv4RadixIntTree {
         values[node] = value;
     }
 
+    /**
+     * Expand Allocated Size
+     */
     private void expandAllocatedSize() {
         int oldSize = allocatedSize;
-        allocatedSize = allocatedSize * 2;
+        allocatedSize *= 2;
 
         int[] newLefts = new int[allocatedSize];
         System.arraycopy(lefts, 0, newLefts, 0, oldSize);
@@ -144,7 +211,7 @@ public class IPv4RadixIntTree {
         System.arraycopy(rights, 0, newRights, 0, oldSize);
         rights = newRights;
 
-        int[] newValues = new int[allocatedSize];
+        long[] newValues = new long[allocatedSize];
         System.arraycopy(values, 0, newValues, 0, oldSize);
         values = newValues;
     }
@@ -152,18 +219,20 @@ public class IPv4RadixIntTree {
     /**
      * Selects a value for a given IPv4 address, traversing tree and choosing
      * most specific value available for a given address.
+     *
      * @param key IPv4 address to look up
      * @return value at most specific IPv4 network in a tree for a given IPv4
      * address
      */
-    public int selectValue(long key) {
+    public long selectValue(long key) {
         long bit = MAX_IPV4_BIT;
-        int value = NO_VALUE;
+        long value = NO_VALUE;
         int node = ROOT_PTR;
 
         while (node != NULL_PTR) {
-            if (values[node] != NO_VALUE)
+            if (values[node] != NO_VALUE) {
                 value = values[node];
+            }
             node = ((key & bit) != 0) ? rights[node] : lefts[node];
             bit >>= 1;
         }
@@ -173,38 +242,57 @@ public class IPv4RadixIntTree {
 
     /**
      * Puts a key-value pair in a tree, using a string representation of IPv4 prefix.
+     *
      * @param ipNet IPv4 network as a string in form of "a.b.c.d/e", where a, b, c, d
-     * are IPv4 octets (in decimal) and "e" is a netmask in CIDR notation
+     *              are IPv4 octets (in decimal) and "e" is a netmask in CIDR notation
      * @param value an arbitrary value that would be stored under a given key
      * @throws UnknownHostException
      */
-    public void put(String ipNet, int value) throws UnknownHostException {
+    public void put(String ipNet, long value) throws UnknownHostException {
         int pos = ipNet.indexOf('/');
         String ipStr = ipNet.substring(0, pos);
-        long ip = inet_aton(ipStr);
+        long ip = inetNtoa(ipStr);
 
-        String netmaskStr = ipNet.substring(pos + 1);
-        int cidr = Integer.parseInt(netmaskStr);
-        long netmask =  ((1L << (32 - cidr)) - 1L) ^ 0xffffffffL;
+        String netMaskStr = ipNet.substring(pos + 1);
+        int cidr = 0;
+        try {
+            cidr = Integer.parseInt(netMaskStr.trim());
+        } catch (NumberFormatException e) {
+            System.out.println("error ::: " + netMaskStr);
+        }
 
-        put(ip, netmask, value);
+        long netMask = ((1L << (32 - cidr)) - 1L) ^ 0xffffffffL;
+        put(ip, netMask, value);
     }
 
     /**
      * Selects a value for a given IPv4 address, traversing tree and choosing
      * most specific value available for a given address.
-     * @param key IPv4 address to look up, in string form (i.e. "a.b.c.d")
+     *
+     * @param ipStr IPv4 address to look up, in string form (i.e. "a.b.c.d")
      * @return value at most specific IPv4 network in a tree for a given IPv4
      * address
      * @throws UnknownHostException
      */
-    public int selectValue(String ipStr) throws UnknownHostException {
-        return selectValue(inet_aton(ipStr));
+    public long selectValue(String ipStr) throws UnknownHostException {
+        return selectValue(inetNtoa(ipStr));
     }
+
+    /**
+     * Returns a size of tree in number of nodes (not number of prefixes stored).
+     *
+     * @return a number of nodes in current tree
+     */
+    public int size() {
+        return size;
+    }
+
 
     /**
      * Helper function that reads IPv4 radix tree from a local file in tab-separated format:
      * (IPv4 net => value)
+     * Default format :not nginx
+     *
      * @param filename name of a local file to read
      * @return a fully constructed IPv4 radix tree from that file
      * @throws IOException
@@ -216,10 +304,24 @@ public class IPv4RadixIntTree {
     /**
      * Helper function that reads IPv4 radix tree from a local file in tab-separated format:
      * (IPv4 net => value)
+     * Default format :not nginx
+     *
      * @param filename name of a local file to read
+     * @return a fully constructed IPv4 radix tree from that file
+     * @throws IOException
+     */
+    public static IPv4RadixIntTree loadFromHdfsFile(String filename) throws IOException {
+        return loadFromHdfs(filename, false);
+    }
+
+    /**
+     * Helper function that reads IPv4 radix tree from a local file in tab-separated format:
+     * (IPv4 net => value)
+     *
+     * @param filename    name of a local file to read
      * @param nginxFormat if true, then file would be parsed as nginx web server configuration file:
-     * "value" would be treated as hex and last symbol at EOL would be stripped (as normally nginx
-     * config files has lines ending with ";")
+     *                    "value" would be treated as hex and last symbol at EOL would be stripped (as normally nginx
+     *                    config files has lines ending with ";")
      * @return a fully constructed IPv4 radix tree from that file
      * @throws IOException
      */
@@ -227,7 +329,49 @@ public class IPv4RadixIntTree {
         IPv4RadixIntTree tr = new IPv4RadixIntTree(countLinesInLocalFile(filename));
         BufferedReader br = new BufferedReader(new FileReader(filename));
         String l;
-        int value;
+        long value;
+        /*
+         line (cidr,nextId,ispId,regionId,regionlevel,regionType,networkType)
+         112.60.0.0/18	951728549285331151	2	34	3	2	0
+         */
+
+        while ((l = br.readLine()) != null) {
+            String[] c = l.split("\t", -1);
+
+            if (nginxFormat) {
+                // strip ";" at EOL
+                c[1] = c[1].substring(0, c[1].length() - 1);
+
+                // NB: This is to work around malicious "80000000" AS number
+                value = Long.parseLong(c[1], 16);
+            } else {
+                // NB: You can adjust the use of int or long.
+                value = Long.parseLong(c[1]);
+            }
+
+            tr.put(c[0], value);
+        }
+
+        return tr;
+    }
+
+    /**
+     * Read region file from hadoop distribute file system .
+     *
+     * @param filePath    filePath
+     * @param nginxFormat format
+     * @return IPv4RadixIntTree
+     * @throws IOException
+     */
+    public static IPv4RadixIntTree loadFromHdfs(String filePath, boolean nginxFormat) throws IOException {
+        IPv4RadixIntTree tr = new IPv4RadixIntTree(countLinesInHdfds(filePath));
+        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(new Path(filePath)), "UTF-8"));
+        String l;
+        long value;
+        /*
+         line (cidr,nextId,ispId,regionId,regionlevel,regionType,networkType)
+         112.60.0.0/18	951728549285331151	2	34	3	2	0
+         */
 
         while ((l = br.readLine()) != null) {
             String[] c = l.split("\t", -1);
@@ -237,38 +381,15 @@ public class IPv4RadixIntTree {
                 c[1] = c[1].substring(0, c[1].length() - 1);
 
                 // NB: this is to work around malicious "80000000" AS number
-                value = (int) Long.parseLong(c[1], 16);
+                value = Long.parseLong(c[1], 16);
             } else {
-                value = Integer.parseInt(c[1]);
+                value = Long.parseLong(c[1]);
             }
 
-            tr.put(c[0], value);
+            tr.put(c[0].trim(), value);
         }
 
         return tr;
     }
 
-    private static long inet_aton(String ipStr) throws UnknownHostException {
-        ByteBuffer bb = ByteBuffer.allocate(8);
-        bb.putInt(0);
-        bb.put(InetAddress.getByName(ipStr).getAddress());
-        bb.rewind();
-        return bb.getLong();
-    }
-
-    private static int countLinesInLocalFile(String filename) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(filename));
-        int n = 0;
-        String l;
-        while ((l = br.readLine()) != null) {
-            n++;
-        }
-        return n;
-    }
-
-    /**
-     * Returns a size of tree in number of nodes (not number of prefixes stored).
-     * @return a number of nodes in current tree
-     */
-    public int size() { return size; }
 }

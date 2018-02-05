@@ -16,12 +16,12 @@
 
 package com.openstat;
 
+import org.testng.annotations.Test;
+
 import java.io.IOException;
 import java.util.Random;
 
-import org.testng.annotations.Test;
-
-public class BenchmarkTests {
+public class BenchmarkTest {
     private static final long SLEEP_INTERVAL = 100;
     public static int M = 10;
 
@@ -43,7 +43,7 @@ public class BenchmarkTests {
         long m1 = Runtime.getRuntime().freeMemory();
         IPv4RadixIntTree tr[] = new IPv4RadixIntTree[M];
         for (int i = 0; i < M; i++)
-            tr[i] = IPv4RadixIntTree.loadFromLocalFile("test/ip-prefix-base.txt");
+            tr[i] = IPv4RadixIntTree.loadFromLocalFile("data/ipv4/ip-prefix-base.txt");
         gc();
         long m2 = Runtime.getRuntime().freeMemory();
         System.out.format(

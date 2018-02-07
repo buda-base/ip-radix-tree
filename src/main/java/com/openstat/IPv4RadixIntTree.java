@@ -16,6 +16,7 @@
 
 package com.openstat;
 
+import com.openstat.utils.RegexIpAddress;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -336,7 +337,7 @@ public class IPv4RadixIntTree {
          */
 
         while ((l = br.readLine()) != null) {
-            String[] c = l.split("\t", -1);
+            String[] c = l.split("\\s+", -1);
 
             if (nginxFormat) {
                 // strip ";" at EOL
@@ -349,7 +350,13 @@ public class IPv4RadixIntTree {
                 value = Long.parseLong(c[1]);
             }
 
-            tr.put(c[0], value);
+            ////////////////////////////////////////////////////////
+            // Judge the text of the ip is legal!
+            String ip=c[0].split("/")[0];
+            if(RegexIpAddress.isLegalIp(ip)){
+                tr.put(c[0].trim(), value);
+            }
+
         }
 
         return tr;
@@ -385,8 +392,13 @@ public class IPv4RadixIntTree {
             } else {
                 value = Long.parseLong(c[1]);
             }
+            ////////////////////////////////////////////
+            // Judge the text of the ip is legal or not!
+            String ip=c[0].split("/")[0];
+            if(RegexIpAddress.isLegalIp(ip)){
+                tr.put(c[0].trim(), value);
+            }
 
-            tr.put(c[0].trim(), value);
         }
 
         return tr;

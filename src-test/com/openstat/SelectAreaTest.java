@@ -19,6 +19,7 @@ package com.openstat;
 
 import com.openstat.utils.IdGen;
 import com.openstat.utils.IpAddressMatcher;
+import com.openstat.utils.RegexIpAddress;
 import org.testng.annotations.Test;
 
 import java.io.BufferedReader;
@@ -46,6 +47,26 @@ import java.net.InetAddress;
  * Attention：
  */
 public class SelectAreaTest {
+
+    /**
+     * 2018-02-08 Test ip is legal or not.
+     */
+    @Test
+    public void judgeIpLegalOrNot(){
+        String []ipv4={"1.1.1.12","251.2.1.1","256.2.3.45","25.2.3.45.23"};
+        String []ipv6={"4001:DA8:0200:0:0:0:0:e34","40012:DA8:0200:0:0:0:0:e34","4001:DA8:0200:0:0:0:0:e34t","4001:DA8:0200:0:0:0:0:e34"};
+        System.out.println("-----------------------------------ipv4------------------------------");
+        for(String ip4:ipv4){
+            Boolean res01=RegexIpAddress.isLegalIp(ip4);
+            System.out.println(res01);
+        }
+
+        System.out.println("-----------------------------------ipv6------------------------------");
+        for(String ip6:ipv6){
+            Boolean res02=RegexIpAddress.isLegalIp(ip6);
+            System.out.println(res02);
+        }
+    }
 
     /**
      * "2018-1-24 11:48:23 Test load local region file ipv4"

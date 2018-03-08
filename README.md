@@ -4,7 +4,7 @@ of IPv4 radix tree and IPv6 radix tree (AKA Patricia trie) in Java.
 The API roughly follows Java Collections API and can be easily
 demonstrated in a following snippet:
 `IPv4 lookup`
-```
+
 ```java
 IPv4RadixIntTree tr = new IPv4RadixIntTree();
 tr.put(0x0a000000, 0xffffff00, 42);

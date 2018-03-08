@@ -1,9 +1,10 @@
-3e:0:0:0:2:0:0:f	big
-fe80:0:0:0:2:0:0:e	test
-1050:0:0:0:5:600:300c:326b  nanjing
-1050:0:4568:efff:dfff:dfff:dfff:dfff  beijing
-1:0:0:0:0:0:0:0  beijing002
-4001:DA8:0200:0:0:0:0:e34	清华大学
-8001:DA8:0201:0:0:0:0:e34	北京大学
-5001:DA8:0202:0:0:0:0:e34	北京邮电大学
-1001:DA8:0202:0:0:0:0:e32	北京邮电34
+bb:0:0:0:0:0:0:0
+bb:e:0:0:0:0:0:2
+bbbb:0:0:0:0:0:10:0
+bbbb:0:0:0:0:0:10:1
+bbbb:0:0:0:0:0:10:eeee
+1:0:0:0:0:0:0:ed
+1:3eee:eeee:eeee:eeee:eeee:eeee:eeee
+1:1eee:eeee:eeee:eeee:eeee:eeee:eeee
+1:0:3ee:eeee:eeee:eeee:eeee:eeee
+1:e0:3ee:eeee:eeee:eeee:eeee:eeee

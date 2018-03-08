@@ -25,7 +25,7 @@ import java.io.IOException;
 import static org.testng.Assert.assertEquals;
 
 
-public class RadixTreeTest {
+public class RadixTreeIpv4Test {
     @Test
     public void testCidrInclusion() {
         IPv4RadixIntTree tr = new IPv4RadixIntTree(100);

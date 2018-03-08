@@ -46,7 +46,53 @@ import java.net.InetAddress;
  * Status：Using online
  * Attention：
  */
-public class SelectAreaTest {
+public class SelectIpv4AreaTest {
+    private static final BigInteger IPV6_END_VALUE = new BigInteger("340282366920938586008062602462446642046");
+    /**
+     * 2018-3-6 15:54:36
+     * Test compareTo BigInteger
+     */
+    @Test
+    public void testBigIntegerCompareTo(){
+        int cidr=23;
+        BigInteger temp=new BigInteger("1").shiftLeft(128 - cidr).subtract(new BigInteger("1"));
+
+        BigInteger netMask = temp.xor(IPV6_END_VALUE);
+
+        System.out.println(netMask);
+
+        System.out.println("-------------------------------");
+        BigInteger b1=new BigInteger("-1");
+        BigInteger b2=new BigInteger("0");
+        BigInteger b3=new BigInteger("1");
+        BigInteger b4=new BigInteger("-20");
+        System.out.println(b1.compareTo(BigInteger.ZERO));
+        System.out.println(b2.compareTo(BigInteger.ZERO));
+        System.out.println(b3.compareTo(BigInteger.ZERO));
+        System.out.println("---------------------------------------");
+        System.out.println(b1.compareTo(b1));
+        System.out.println(b2.compareTo(b1));
+        System.out.println(b3.compareTo(b1));
+        System.out.println(b4.compareTo(b1));
+
+        // 10000000000000000000000000000000 --> 32 bit
+        // 80000000
+        final long START_IPV4_BIT = 0x80000000L;
+        // 11111111111111111111111111111111 --> 32 bit
+        // ffffffff
+         final long END_IPV4_BIT = 0xffffffffL;
+        System.out.println(START_IPV4_BIT);
+        System.out.println(END_IPV4_BIT);
+
+        System.out.println("--------");
+        int res=9;
+//        res+=2;
+        res=res+2;
+        System.out.println(res);
+
+        long lss=1l;
+        System.out.println(lss);
+    }
 
     /**
      * 2018-02-08 Test ip is legal or not.
@@ -146,10 +192,12 @@ public class SelectAreaTest {
      */
     @Test
     public void testGetIdGen(){
-        Long nextId=IdGen.get().nextId();
-        System.out.println("Get the world's id is "+nextId);
-        System.out.println("The length of id is "+nextId.toString().length());
-        System.out.println(1 >>> 63 );
+        for(int i=0;i<200;i++){
+            Long nextId=IdGen.get().nextId();
+            System.out.println("Get the world's id is "+nextId);
+            System.out.println("The length of id is "+nextId.toString().length());
+
+        }
 
     }
 }

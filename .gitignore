@@ -5,3 +5,4 @@ test-output
 .classpath
 *.iml
 target/*
+mydata/*

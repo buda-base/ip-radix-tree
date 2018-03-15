@@ -1,5 +1,7 @@
 package com.openstat.utils;
 
+import sun.net.util.IPAddressUtil;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -37,9 +39,11 @@ public class RegexIpAddress {
 
     /**
      * Judge the ip is legal or not.
+     * 2018-3-15 10:34:10 This method has been abandoned, please do not use!
      * @param ip ip
      * @return result
      */
+    @Deprecated
     public static Boolean isLegalIp(String ip){
         String  regexIpv4 = "^(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)(\\.(25[0-5]|2[0-4]\\d|[0-1]?\\d?\\d)){3}$";
         String  regexIpv6 = "^([\\da-fA-F]{1,4}:){7}[\\da-fA-F]{1,4}$";
@@ -48,5 +52,23 @@ public class RegexIpAddress {
             result=true;
         }
            return result;
+    }
+
+    /**
+     * 2018-1-16 14:45:04
+     * Content :Check the clientIp is ipv4 or ipv6 .
+     * @param ip ip
+     * @return  ipv4=4 ,ipv6=6 , other=0
+     */
+    public static int isIpv4OrIpv6(String ip){
+        int result;
+        if(IPAddressUtil.isIPv4LiteralAddress(ip)){
+            result=4;
+        }else if(IPAddressUtil.isIPv6LiteralAddress(ip)){
+            result=6;
+        }else{
+            result=0;
+        }
+        return result;
     }
 }

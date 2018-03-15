@@ -49,7 +49,7 @@ public class RadixTreeIpv6Test {
         assertEquals(tr.selectValue(IpConvert.stringToBigInt("aa:0:10:0:0:0:10:2")), new BigInteger("12345"));
         assertEquals(tr.selectValue(IpConvert.stringToBigInt("aa:0:10:0:0:0:10:3")), new BigInteger("12345"));
 
-        assertEquals(tr.selectValue(IpConvert.stringToBigInt("bbbb:0:0:0:0:0:10:0")), new BigInteger("12346"));
+        assertEquals(tr.selectValue(IpConvert.stringToBigInt("bbbb::10:0")), new BigInteger("12346"));
         assertEquals(tr.selectValue(IpConvert.stringToBigInt("cc:0:10:10:0:0:10:0")), new BigInteger("12347"));
         assertEquals(tr.selectValue(IpConvert.stringToBigInt("bbbb:bbb:0:0:0:0:10:0")), IPv6RadixBigIntegerTree.NO_VALUE);
     }

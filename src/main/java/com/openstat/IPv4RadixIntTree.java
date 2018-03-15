@@ -358,7 +358,7 @@ public class IPv4RadixIntTree {
             ////////////////////////////////////////////////////////
             // Judge the text of the ip is legal!
             String ip=c[0].split("/")[0];
-            if(RegexIpAddress.isLegalIp(ip)){
+            if(RegexIpAddress.isIpv4OrIpv6(ip)==4){
                 tr.put(c[0].trim(), value);
             }
 
@@ -400,7 +400,7 @@ public class IPv4RadixIntTree {
             ////////////////////////////////////////////
             // Judge the text of the ip is legal or not!
             String ip=c[0].split("/")[0];
-            if(RegexIpAddress.isLegalIp(ip)){
+            if(RegexIpAddress.isIpv4OrIpv6(ip)==4){
                 tr.put(c[0].trim(), value);
             }
 

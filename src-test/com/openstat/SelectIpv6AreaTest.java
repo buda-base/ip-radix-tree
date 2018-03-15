@@ -81,7 +81,6 @@ public class SelectIpv6AreaTest {
 
     }
 
-
     /**
      * 2018-3-7 14:47:04
      * Test BigInteger calculation.
@@ -90,11 +89,13 @@ public class SelectIpv6AreaTest {
     public void testBigInteger(){
         BigInteger start=new BigInteger("1");
         start=start.shiftLeft(127);
+        // 10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
         System.out.println("start is "+start);
 
         BigInteger end=new BigInteger("1");
         end=end.shiftLeft(128);
-        System.out.println("end is "+end);
+        // 11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111
+        System.out.println("end is "+end.subtract(new BigInteger("-1")));
 
     }
 

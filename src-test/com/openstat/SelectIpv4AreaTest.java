@@ -100,16 +100,16 @@ public class SelectIpv4AreaTest {
     @Test
     public void judgeIpLegalOrNot(){
         String []ipv4={"1.1.1.12","251.2.1.1","256.2.3.45","25.2.3.45.23"};
-        String []ipv6={"4001:DA8:0200:0:0:0:0:e34","40012:DA8:0200:0:0:0:0:e34","4001:DA8:0200:0:0:0:0:e34t","4001:DA8:0200:0:0:0:0:e34"};
+        String []ipv6={"4001:DA8:0200:0:0:0:0:e34","40012:DA8:0200:0:0:0:0:e34","4001:DA8:0200:0:0:0:0:e34t","4001:DA8:0200::e34"};
         System.out.println("-----------------------------------ipv4------------------------------");
         for(String ip4:ipv4){
-            Boolean res01=RegexIpAddress.isLegalIp(ip4);
+            int res01=RegexIpAddress.isIpv4OrIpv6(ip4);
             System.out.println(res01);
         }
 
         System.out.println("-----------------------------------ipv6------------------------------");
         for(String ip6:ipv6){
-            Boolean res02=RegexIpAddress.isLegalIp(ip6);
+            int res02=RegexIpAddress.isIpv4OrIpv6(ip6);
             System.out.println(res02);
         }
     }

@@ -20,11 +20,11 @@ int v3 = tr.selectValue("10.0.3.5"); // => 123, as 10.0.3.5 belongs to 10.0.3.0/
 ```java
 IPv6RadixBigIntegerTree tr = new IPv6RadixBigIntegerTree();
 tr.put("aa:0:10:0:0:0:10:0/126", new BigInteger("12345"));
-tr.put("bbbb:0:0:0:0:0:10:0/127", new BigInteger("12346"));
+tr.put("bbbb::10:0/127", new BigInteger("12346"));
 tr.put("cc:0:10:10:0:0:10:0/128", new BigInteger("12347"));
 
 BigInteger v1=tr.selectValue(IpConvert.stringToBigInt("aa:0:10:0:0:0:10:0"))  // => new BigInteger("12345"))  belongs to aa:0:10:0:0:0:10:0/126
-BigInteger v2=tr.selectValue(IpConvert.stringToBigInt("bbbb:0:0:0:0:0:10:0")) // => new BigInteger("12346")) belongs to bbbb:0:0:0:0:0:10:0/127
+BigInteger v2=tr.selectValue(IpConvert.stringToBigInt("bbbb::10:0")) // => new BigInteger("12346")) belongs to bbbb::10:0/127
 BigInteger v3=tr.selectValue(IpConvert.stringToBigInt("cc:0:10:10:0:0:10:0")) // => new BigInteger("12347")) belongs to cc:0:10:10:0:0:10:0/128
 
 ```
